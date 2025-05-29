@@ -5,9 +5,13 @@ import { componentTagger } from "lovable-tagger";
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => ({
+  base: "/screenguard-writes-pixel/",
   server: {
     host: "::",
     port: 8080,
+  },
+  build: {
+    outDir: "dist",
   },
   plugins: [
     react(),
