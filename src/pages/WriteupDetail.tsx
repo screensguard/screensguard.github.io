@@ -11,7 +11,6 @@ import {
   faShieldHalved 
 } from "@fortawesome/free-solid-svg-icons";
 
-// Sample writeup data with markdown content
 const writeupContent = {
   "jigboy": {
     id: "jigboy",

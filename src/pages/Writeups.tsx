@@ -6,7 +6,7 @@ const allWriteups = [
   {
     id: "jigboy",
     title: "JigBoy",
-    category: "forensics",
+  category: "forensics",
     description: "Jigboy, the superhero, possesses the remarkable ability to reel in colossal fish from the depths of the deep blue sea.",
     date: "2024-01-25"
   },
@@ -27,7 +27,7 @@ const Writeups = () => {
           <p className="text-lg text-gray-300">
             Detailed guides and walkthroughs for various cybersecurity challenges and topics
           </p>
-        </div>
+          </div>
 
         {/* Writeups Grid */}
         <div className="grid gap-6 md:grid-cols-1 lg:grid-cols-1 max-w-4xl">

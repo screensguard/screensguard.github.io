@@ -41,7 +41,7 @@ const Index = () => {
         {/* Recent Writeups Section */}
         <section className="max-w-6xl mx-auto px-6 pb-16">
           <div className="mb-8">
-            <h2 className="text-2xl font-bold text-gray-100 mb-3">Recent Writeups</h2>
+            <h2 className="text-xl font-bold text-gray-100 mb-3">Recent Writeups</h2>
             <p className="text-gray-400">
               
             </p>
