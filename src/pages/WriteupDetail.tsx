@@ -14,7 +14,7 @@ import {
 const writeupContent = {
   "jigboy": {
     id: "jigboy",
-    title: "JigBoy",
+    title: "Mapna CTF 2024 : JigBoy",
     category: "forensics",
     date: "2024-01-25",
     content: `## Description
