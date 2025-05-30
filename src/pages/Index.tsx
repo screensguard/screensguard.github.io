@@ -1,5 +1,8 @@
 import Header from "@/components/Header";
 import WriteupCard from "@/components/WriteupCard";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faGithub, faTwitter } from "@fortawesome/free-brands-svg-icons";
+import { faFlag } from "@fortawesome/free-solid-svg-icons";
 
 // Sample data for recent writeups
 const recentWriteups = [
@@ -65,6 +68,17 @@ const Index = () => {
       {/* Footer */}
       <footer className="border-t border-gray-800 bg-black py-6">
         <div className="max-w-6xl mx-auto px-6 text-center">
+          <div className="flex justify-center space-x-6 mb-4">
+            <a href="https://github.com/screensguard" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-white transition-colors">
+              <FontAwesomeIcon icon={faGithub} size="lg" />
+            </a>
+            <a href="https://ctftime.org/user/79947" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-white transition-colors">
+              <FontAwesomeIcon icon={faFlag} size="lg" />
+            </a>
+            <a href="https://x.com/Rudrakshsaini2" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-white transition-colors">
+              <FontAwesomeIcon icon={faTwitter} size="lg" />
+            </a>
+          </div>
           <p className="text-gray-400 text-sm">© screenguard 2025. All rights reserved.</p>
         </div>
       </footer>
