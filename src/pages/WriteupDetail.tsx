@@ -90,6 +90,7 @@ const WriteupDetail = () => {
   const tableOfContents = extractTableOfContents(writeup?.content || '');
   const categoryStyle = getCategoryStyle(writeup?.frontmatter.category || '');
 
+  // Improved markdown renderer: supports inline code and links on the same line
   const renderMarkdown = (content: string) => {
     let inCodeBlock = false;
     let codeBlockContent = '';
@@ -179,16 +180,45 @@ const WriteupDetail = () => {
           return <li key={index} className="text-gray-300 ml-4 mb-2">{line}</li>;
         }
         
-        // Inline code
-        if (line.includes('`')) {
-          const parts = line.split('`');
+        // Inline code and links together
+        if (line.includes('`') || /\[([^\]]+)\]\(([^)]+)\)/.test(line)) {
+          const elements = [];
+          let idx = 0;
+          const regex = /(`[^`]+`)|(\[([^\]]+)\]\(([^)]+)\))/g;
+          let match;
+          while ((match = regex.exec(line)) !== null) {
+            if (match.index > idx) {
+              elements.push(line.slice(idx, match.index));
+            }
+            if (match[1]) {
+              // Inline code
+              elements.push(
+                <code key={idx + '-code'} className="bg-gray-800 px-1.5 py-0.5 rounded text-sm font-mono text-gray-200">
+                  {match[1].slice(1, -1)}
+                </code>
+              );
+            } else if (match[2]) {
+              // Markdown link
+              elements.push(
+                <a
+                  key={idx + '-link'}
+                  href={match[5]}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-blue-400 underline break-all"
+                >
+                  {match[4]}
+                </a>
+              );
+            }
+            idx = regex.lastIndex;
+          }
+          if (idx < line.length) {
+            elements.push(line.slice(idx));
+          }
           return (
             <p key={index} className="text-gray-300 leading-relaxed mb-4">
-              {parts.map((part, i) => 
-                i % 2 === 0 ? 
-                  part : 
-                  <code key={i} className="bg-gray-800 px-1.5 py-0.5 rounded text-sm font-mono text-gray-200">{part}</code>
-              )}
+              {elements}
             </p>
           );
         }
@@ -276,26 +306,26 @@ const WriteupDetail = () => {
             <div className="sticky top-24 bg-transparent border border-gray-700 rounded-lg p-6">
               <h3 className="font-semibold text-gray-100 mb-4">Table of Contents</h3>
               <nav className="space-y-2">
-  {tableOfContents.map((item) => (
-    <a
-      key={item.id}
-      href={`#${item.id}`}
-      onClick={e => {
-        e.preventDefault();
-        const el = document.getElementById(item.id);
-        if (el) {
-          el.scrollIntoView({ behavior: "smooth", block: "start" });
-        }
-      }}
-      className={`block text-sm hover:text-gray-100 transition-colors ${
-        item.level === 1 ? 'font-medium text-gray-100' : 
-        item.level === 2 ? 'text-gray-300 pl-3' : 'text-gray-400 pl-6'
-      }`}
-    >
-      {item.text}
-    </a>
-  ))}
-</nav>
+                {tableOfContents.map((item) => (
+                  <a
+                    key={item.id}
+                    href={`#${item.id}`}
+                    onClick={e => {
+                      e.preventDefault();
+                      const el = document.getElementById(item.id);
+                      if (el) {
+                        el.scrollIntoView({ behavior: "smooth", block: "start" });
+                      }
+                    }}
+                    className={`block text-sm hover:text-gray-100 transition-colors ${
+                      item.level === 1 ? 'font-medium text-gray-100' : 
+                      item.level === 2 ? 'text-gray-300 pl-3' : 'text-gray-400 pl-6'
+                    }`}
+                  >
+                    {item.text}
+                  </a>
+                ))}
+              </nav>
             </div>
           </div>
 
@@ -337,24 +367,24 @@ const WriteupDetail = () => {
         </div>
       </div>
       {/* Footer */}
-            <footer className="border-t border-gray-800 bg-black py-6">
-              <div className="max-w-6xl mx-auto px-6 text-center">
-                <div className="flex justify-center space-x-6 mb-4">
-                  <a href="https://github.com/screensguard" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-white transition-colors">
-                    <FontAwesomeIcon icon={faGithub} size="lg" />
-                  </a>
-                  <a href="https://ctftime.org/user/79947" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-white transition-colors">
-                    <FontAwesomeIcon icon={faFlag} size="lg" />
-                  </a>
-                  <a href="https://x.com/Rudrakshsaini2" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-white transition-colors">
-                    <FontAwesomeIcon icon={faTwitter} size="lg" />
-                  </a>
-                </div>
-                <p className="text-gray-400 text-sm">© screenguard 2025. All rights reserved.</p>
-              </div>
-            </footer>
+      <footer className="border-t border-gray-800 bg-black py-6">
+        <div className="max-w-6xl mx-auto px-6 text-center">
+          <div className="flex justify-center space-x-6 mb-4">
+            <a href="https://github.com/screensguard" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-white transition-colors">
+              <FontAwesomeIcon icon={faGithub} size="lg" />
+            </a>
+            <a href="https://ctftime.org/user/79947" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-white transition-colors">
+              <FontAwesomeIcon icon={faFlag} size="lg" />
+            </a>
+            <a href="https://x.com/Rudrakshsaini2" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-white transition-colors">
+              <FontAwesomeIcon icon={faTwitter} size="lg" />
+            </a>
+          </div>
+          <p className="text-gray-400 text-sm">© screenguard 2025. All rights reserved.</p>
+        </div>
+      </footer>
     </div>
   );
 };
 
-export default WriteupDetail; 
+export default WriteupDetail;
