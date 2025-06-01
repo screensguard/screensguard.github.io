@@ -1,0 +1,16 @@
+[
+    {
+        "id": "themulestealer",
+        "title": "SASC CTF 2025 - The Mule Stealer",
+        "category": "forensics",
+        "date": "2025-06-01",
+        "description": "Is this a rabbit? Or a cat? Or a crabbit..., maybe? I'm instructed not to click on weird attachments, but this one should be my background image for real!"
+      },
+  {
+    "id": "jigboy",
+    "title": "Mapna CTF 2024 - JigBoy",
+    "category": "forensics",
+    "date": "2024-01-25",
+    "description": "A forensics challenge from MAPNA CTF 2024 involving file header analysis and repair"
+  }
+] 

@@ -3,9 +3,8 @@ import { Badge } from "./ui/badge";
 import { Link } from "react-router-dom";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { 
-  faScrewdriver,
   faLaptopCode, 
-  faMagnifyingGlass, 
+  faScrewdriver, 
   faLock, 
   faGears, 
   faShieldHalved 

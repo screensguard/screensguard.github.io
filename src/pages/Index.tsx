@@ -1,28 +1,35 @@
+import React, { useEffect, useState } from 'react';
 import Header from "@/components/Header";
 import WriteupCard from "@/components/WriteupCard";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faGithub, faTwitter } from "@fortawesome/free-brands-svg-icons";
 import { faFlag } from "@fortawesome/free-solid-svg-icons";
-
-// Sample data for recent writeups
-const recentWriteups = [
-  {
-    id: "jigboy",
-    title: "Mapna CTF 2024 : JigBoy",
-    category: "forensics",
-    description: "Jigboy, the superhero, possesses the remarkable ability to reel in colossal fish from the depths of the deep blue sea.",
-    date: "2024-01-25"
-  }
-];
+import { getAllWriteups, WriteupFrontmatter } from '@/lib/markdown';
 
 const Index = () => {
+  const [writeups, setWriteups] = useState<WriteupFrontmatter[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const loadWriteups = async () => {
+      try {
+        const data = await getAllWriteups();
+        setWriteups(data);
+      } catch (error) {
+        console.error('Error loading writeups:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadWriteups();
+  }, []);
+
   return (
-    <div className="min-h-screen bg-black text-gray-100 flex flex-col">
+    <div className="min-h-screen bg-black">
       <Header />
-      
-      <div className="flex-grow">
-        {/* Hero Section - Made Smaller */}
-        <section className="max-w-6xl mx-auto px-6 py-8">
+
+      <section className="max-w-6xl mx-auto px-6 py-8">
           <div className="text-center">
             {/* Profile Image */}
             <img 
@@ -40,30 +47,40 @@ const Index = () => {
             </p>
           </div>
         </section>
-
-        {/* Recent Writeups Section */}
-        <section className="max-w-6xl mx-auto px-6 pb-16">
-          <div className="mb-8">
-            <h2 className="text-xl font-bold text-gray-100 mb-3">Recent Writeups</h2>
-            <p className="text-gray-400">
-              
-            </p>
-          </div>
-          
-          <div className="grid gap-6 md:grid-cols-1 lg:grid-cols-1 max-w-4xl mx-auto">
-            {recentWriteups.map((writeup, index) => (
+      {/* Recent Writeups Section */}
+      <section className="max-w-6xl mx-auto px-6 pb-16">
+        <div className="mb-8">
+          <h2 className="text-xl font-bold text-gray-100 mb-3">Recent Writeups</h2>
+          <p className="text-gray-400">
+            {loading ? 'Loading writeups...' : `${writeups.length} writeups available`}
+          </p>
+        </div>
+        
+        <div className="grid gap-6 md:grid-cols-1 lg:grid-cols-1 max-w-4xl mx-auto">
+          {loading ? (
+            // Loading skeleton
+            Array(3).fill(null).map((_, index) => (
+              <div key={index} className="animate-pulse bg-gray-800 rounded-lg p-6">
+                <div className="h-4 bg-gray-700 rounded w-1/4 mb-4"></div>
+                <div className="h-6 bg-gray-700 rounded w-3/4 mb-3"></div>
+                <div className="h-4 bg-gray-700 rounded w-full mb-4"></div>
+                <div className="h-4 bg-gray-700 rounded w-2/3"></div>
+              </div>
+            ))
+          ) : (
+            writeups.map((writeup) => (
               <WriteupCard
-                key={index}
+                key={writeup.id}
                 id={writeup.id}
                 title={writeup.title}
                 category={writeup.category}
-                description={writeup.description}
+                description={writeup.description || ''}
                 date={writeup.date}
               />
-            ))}
-          </div>
-        </section>
-      </div>
+            ))
+          )}
+        </div>
+      </section>
 
       {/* Footer */}
       <footer className="border-t border-gray-800 bg-black py-6">

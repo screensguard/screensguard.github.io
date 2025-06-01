@@ -1,66 +1,19 @@
-import React from 'react';
-import { useParams } from 'react-router-dom';
+import React, { useEffect, useState } from 'react';
+import { useParams, Link } from 'react-router-dom';
 import Header from "@/components/Header";
 import { Badge } from "@/components/ui/badge";
+import { faScrewdriver } from "@fortawesome/free-solid-svg-icons";
+import { getWriteup, WriteupContent } from '@/lib/markdown';
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { 
-  faLaptopCode, 
-  faScrewdriver, 
-  faLock, 
-  faGears, 
-  faShieldHalved 
-} from "@fortawesome/free-solid-svg-icons";
+import { faGithub, faTwitter } from "@fortawesome/free-brands-svg-icons";
+import { faFlag } from "@fortawesome/free-solid-svg-icons";
 
-const writeupContent = {
-  "jigboy": {
-    id: "jigboy",
-    title: "Mapna CTF 2024 : JigBoy",
-    category: "forensics",
-    date: "2024-01-25",
-    content: `## Description
-> Jigboy, the superhero, possesses the remarkable ability to reel in colossal fish from the depths of the deep blue sea.
-
-JigBoy is one of the forensics challenge from the MAPNA CTF 2024 which ended up getting 5 solves in the CTF and i upsolved it since I couldnt play the CTF on time. 
-## Solution
-After extracting the file, at the first glance we see a file with \`.damaged\` extension. We can assume its some kind of "Fix the damaged file" challenge so we open it in an hex editor.
-
-![Hex editor view](image.png)
-
-I couldn't figure out what type of damaged file this was so i decided to google the first few hex of the file \`32 0D 0A 1A 0A\` to see if we can get information from the header.
-Straight up on the 2nd link it tells that this header belongs to a \`.jbg\` file, more precisely \`.jbg2\` and the correct header is \`97 4A 42 32 0D 0A 1A 0A\`
-
-To understand the Header more:
-- \`0x97\`: The first character is nonprintable, so that the file cannot be mistaken for ASCII.
-- \`0x4A 0x42 0x32\`: decodes to jb2 
-- \`0x1\`: This field indicates that the file uses the sequential organisation, and that the number of pages is known.
-- \`0x00 0x00 0x00 0x01\`: This indicates that the file only has 1 page
-
-After fixing the header, I opened the file in STDU viewer but It still gave me an error...
-
-![STDU viewer error](image-1.png)
-
-So there's more than initial file header corrupted so I started reading more about the jb2 format and looking at the changed hex. To understand and to get familiar with the data, I downloaded a sample jbig file and compared the hex
-
-Sample from the Internet:
-![Sample hex comparison](image-2.png)
-
-Now I am assuming the size bytes of the file (\`00 30 00 01 00 00 00 01 00 00 01 01 00 00 00 13\`)
-has been modified too so I just copied the bytes from the sample to the original file along with the end hex data \`0x00 0x03 0x33 0x00\` to \`0x00 0x03 0x31 0x00\` and tried opening the file and *VOILA* :D We get the flag 
-
-![Flag revealed](image-3.png)
-
-I tried tweaking the size bytes to see what exactly was meant to be changed since I used the same bytes as the sample Image but i ended up either crashing the file or It showing nothing.
-
-> To read more about the JBIG file format: [JBIG Documentation](https://ics.uci.edu/~dan/class/267/papers/jbig2.pdf)
-`
-  }
-};
 
 const getCategoryStyle = (cat: string): { icon: any; color: string } => {
   switch (cat.toLowerCase()) {
     case 'web':
       return {
-        icon: faLaptopCode,
+        icon: faScrewdriver,
         color: 'text-blue-400'
       };
     case 'forensics':
@@ -70,22 +23,22 @@ const getCategoryStyle = (cat: string): { icon: any; color: string } => {
       };
     case 'crypto':
       return {
-        icon: faLock,
+        icon: faScrewdriver,
         color: 'text-yellow-400'
       };
     case 'reverse':
       return {
-        icon: faGears,
+        icon: faScrewdriver,
         color: 'text-orange-400'
       };
     case 'misc':
       return {
-        icon: faShieldHalved,
+        icon: faScrewdriver,
         color: 'text-pink-400'
       };
     default:
       return {
-        icon: faShieldHalved,
+        icon: faScrewdriver,
         color: 'text-gray-400'
       };
   }
@@ -104,9 +57,38 @@ const extractTableOfContents = (content: string) => {
 
 const WriteupDetail = () => {
   const { id } = useParams();
-  const writeup = writeupContent[id as keyof typeof writeupContent];
+  const [writeup, setWriteup] = useState<WriteupContent | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const loadWriteup = async () => {
+      if (!id) {
+        setError('No writeup ID provided');
+        setLoading(false);
+        return;
+      }
+
+      try {
+        const data = await getWriteup(id);
+        if (!data) {
+          setError('Writeup not found');
+        } else {
+          setWriteup(data);
+        }
+      } catch (err) {
+        setError('Error loading writeup');
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadWriteup();
+  }, [id]);
+
   const tableOfContents = extractTableOfContents(writeup?.content || '');
-  const categoryStyle = getCategoryStyle(writeup?.category || '');
+  const categoryStyle = getCategoryStyle(writeup?.frontmatter.category || '');
 
   const renderMarkdown = (content: string) => {
     let inCodeBlock = false;
@@ -173,10 +155,14 @@ const WriteupDetail = () => {
           const match = line.match(/!\[(.*?)\]\((.*?)\)/);
           if (match) {
             const [, alt, src] = match;
+            // Handle both relative and absolute image paths
+            const imagePath = src.startsWith('/')
+              ? src
+              : `/content/writeups/${id}/images/${src}`;
             return (
               <div key={index} className="my-4">
                 <img 
-                  src={`/images/writeups/${id}/${src}`} 
+                  src={imagePath}
                   alt={alt || ''} 
                   className="max-w-full rounded-lg border border-gray-700"
                 />
@@ -217,12 +203,63 @@ const WriteupDetail = () => {
       .filter(Boolean);
   };
 
-  if (!writeup) {
+  if (loading) {
     return (
       <div className="min-h-screen bg-black text-gray-100">
         <Header />
-        <div className="max-w-6xl mx-auto px-6 py-8">
-          <h1 className="text-3xl font-bold">Writeup not found</h1>
+        <div className="max-w-7xl mx-auto px-6 py-8">
+          <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+            {/* Table of Contents - Left Sidebar */}
+            <div className="lg:col-span-1">
+              <div className="sticky top-24 bg-transparent border border-gray-700 rounded-lg p-6">
+                <div className="h-8 bg-gray-700 rounded w-1/3 mb-4 animate-pulse"></div>
+                <div className="space-y-2">
+                  <div className="h-4 bg-gray-700 rounded w-2/3 animate-pulse"></div>
+                  <div className="h-4 bg-gray-700 rounded w-1/2 animate-pulse"></div>
+                  <div className="h-4 bg-gray-700 rounded w-3/4 animate-pulse"></div>
+                </div>
+              </div>
+            </div>
+
+            {/* Main Content */}
+            <div className="lg:col-span-3">
+              <div className="bg-transparent border border-gray-700 rounded-lg p-8">
+                <div className="mb-8 pb-6 border-b border-gray-700">
+                  <div className="flex items-start justify-between mb-3">
+                    <div className="h-8 bg-gray-700 rounded w-1/4 animate-pulse"></div>
+                    <div className="h-4 bg-gray-700 rounded w-1/6 animate-pulse"></div>
+                  </div>
+                  <div className="h-6 bg-gray-700 rounded w-1/2 mb-3 animate-pulse"></div>
+                  <div className="h-4 bg-gray-700 rounded w-3/4 animate-pulse"></div>
+                </div>
+                <div className="space-y-4">
+                  <div className="h-4 bg-gray-700 rounded w-full animate-pulse"></div>
+                  <div className="h-4 bg-gray-700 rounded w-5/6 animate-pulse"></div>
+                  <div className="h-4 bg-gray-700 rounded w-4/6 animate-pulse"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error || !writeup) {
+    return (
+      <div className="min-h-screen bg-black text-gray-100">
+        <Header />
+        <div className="max-w-7xl mx-auto px-6 py-8">
+          <div className="flex flex-col items-center justify-center text-center">
+            <div className="text-4xl font-bold text-red-500 mb-4">Error</div>
+            <div className="text-xl text-gray-300 mb-8">{error || 'Writeup not found'}</div>
+            <Link 
+              to="/writeups" 
+              className="text-blue-400 hover:text-blue-300 transition-colors"
+            >
+              ← Back to Writeups
+            </Link>
+          </div>
         </div>
       </div>
     );
@@ -239,19 +276,26 @@ const WriteupDetail = () => {
             <div className="sticky top-24 bg-transparent border border-gray-700 rounded-lg p-6">
               <h3 className="font-semibold text-gray-100 mb-4">Table of Contents</h3>
               <nav className="space-y-2">
-                {tableOfContents.map((item) => (
-                  <a
-                    key={item.id}
-                    href={`#${item.id}`}
-                    className={`block text-sm hover:text-gray-100 transition-colors ${
-                      item.level === 1 ? 'font-medium text-gray-100' : 
-                      item.level === 2 ? 'text-gray-300 pl-3' : 'text-gray-400 pl-6'
-                    }`}
-                  >
-                    {item.text}
-                  </a>
-                ))}
-              </nav>
+  {tableOfContents.map((item) => (
+    <a
+      key={item.id}
+      href={`#${item.id}`}
+      onClick={e => {
+        e.preventDefault();
+        const el = document.getElementById(item.id);
+        if (el) {
+          el.scrollIntoView({ behavior: "smooth", block: "start" });
+        }
+      }}
+      className={`block text-sm hover:text-gray-100 transition-colors ${
+        item.level === 1 ? 'font-medium text-gray-100' : 
+        item.level === 2 ? 'text-gray-300 pl-3' : 'text-gray-400 pl-6'
+      }`}
+    >
+      {item.text}
+    </a>
+  ))}
+</nav>
             </div>
           </div>
 
@@ -260,21 +304,28 @@ const WriteupDetail = () => {
             <article className="bg-transparent border border-gray-700 rounded-lg p-8">
               {/* Header */}
               <div className="mb-8 pb-6 border-b border-gray-700">
-                <div className="flex items-center justify-between mb-4">
-                  <div>
+                <div className="flex items-start justify-between mb-3">
+                  <div className="mb-3">
                     <Badge className="bg-transparent border border-gray-700 hover:bg-transparent px-3 py-1">
                       <FontAwesomeIcon 
-                        icon={categoryStyle.icon} 
+                        icon={faScrewdriver} 
                         className={`${categoryStyle.color} mr-2 w-4 h-4`}
                       />
                       <span className={categoryStyle.color}>
-                        {writeup.category}
+                        {writeup.frontmatter.category.toLowerCase()}
                       </span>
                     </Badge>
                   </div>
-                  <span className="text-sm text-gray-400">{writeup.date}</span>
+                  <span className="text-sm text-gray-400 whitespace-nowrap ml-4">{writeup.frontmatter.date}</span>
                 </div>
-                <h1 className="text-3xl font-bold text-gray-100">{writeup.title}</h1>
+                <h3 className="text-lg font-semibold text-gray-100 line-clamp-2 mb-3">
+                  {writeup.frontmatter.title}
+                </h3>
+                {writeup.frontmatter.description && (
+                  <p className="text-gray-300 text-sm leading-relaxed">
+                    {writeup.frontmatter.description}
+                  </p>
+                )}
               </div>
 
               {/* Content */}
@@ -285,6 +336,23 @@ const WriteupDetail = () => {
           </div>
         </div>
       </div>
+      {/* Footer */}
+            <footer className="border-t border-gray-800 bg-black py-6">
+              <div className="max-w-6xl mx-auto px-6 text-center">
+                <div className="flex justify-center space-x-6 mb-4">
+                  <a href="https://github.com/screensguard" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-white transition-colors">
+                    <FontAwesomeIcon icon={faGithub} size="lg" />
+                  </a>
+                  <a href="https://ctftime.org/user/79947" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-white transition-colors">
+                    <FontAwesomeIcon icon={faFlag} size="lg" />
+                  </a>
+                  <a href="https://x.com/Rudrakshsaini2" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-white transition-colors">
+                    <FontAwesomeIcon icon={faTwitter} size="lg" />
+                  </a>
+                </div>
+                <p className="text-gray-400 text-sm">© screenguard 2025. All rights reserved.</p>
+              </div>
+            </footer>
     </div>
   );
 };
