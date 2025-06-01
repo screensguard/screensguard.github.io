@@ -7,6 +7,8 @@ import { getWriteup, WriteupContent } from '@/lib/markdown';
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faGithub, faTwitter } from "@fortawesome/free-brands-svg-icons";
 import { faFlag } from "@fortawesome/free-solid-svg-icons";
+import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
+import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism';
 
 
 const getCategoryStyle = (cat: string): { icon: any; color: string } => {
@@ -113,9 +115,19 @@ const WriteupDetail = () => {
             const content = codeBlockContent;
             codeBlockContent = '';
             return (
-              <pre key={index} className="bg-gray-800 border border-gray-700 p-4 rounded-lg my-4">
-                <code className="text-sm font-mono text-gray-200">{content}</code>
-              </pre>
+              <SyntaxHighlighter
+                key={index}
+                language={codeBlockLanguage || undefined}
+                style={vscDarkPlus}
+                customStyle={{
+                  borderRadius: '0.5rem',
+                  margin: '1rem 0',
+                  fontSize: '0.95em',
+                  background: '#1e1e1e',
+                }}
+              >
+                {content}
+              </SyntaxHighlighter>
             );
           }
         }
