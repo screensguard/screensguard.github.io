@@ -43,7 +43,7 @@ const Index = () => {
               screenguard
             </h1>
             <p className="text-lg text-gray-300 max-w-xl mx-auto leading-relaxed">
-              :3
+              Captain @thehackerscrew | :3
             </p>
           </div>
         </section>
